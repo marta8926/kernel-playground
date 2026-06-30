@@ -1,4 +1,4 @@
-obj-m := snf_lkm.o
+obj-m := m14_ttl.o
 
 KMOD_NAME := $(basename $(obj-m))
 KMOD := $(KMOD_NAME).ko
