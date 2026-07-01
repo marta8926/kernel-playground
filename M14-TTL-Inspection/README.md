@@ -1,7 +1,5 @@
 # Software Networks Project: M14 – Packet TTL Inspection (Netfilter)
 
-# Software Networks Project: M14 – Packet TTL Inspection (Netfilter)
-
 **Author:** Marta Rolbiecka [0383386] <br>
 **Level:** Kernel Module Development <br>
 **Course:** Software Networks (2025-2026)
