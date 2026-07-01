@@ -60,23 +60,26 @@ unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_sta
 
 ### 2.3 Key Design Decisions
 
-| Category | Decision | Rationale |
-| :--- | :--- | :--- |
-| **Netfilter Architecture** | `NF_INET_PRE_ROUTING` Hook | Catches all incoming traffic before routing, ensuring no packets are missed due to local routing rules. |
-| **Netfilter Architecture** | `PF_INET` Protocol Family | Targets IPv4 traffic specifically at the primary Netfilter hook registration phase. |
-| **Netfilter Architecture** | `NF_IP_PRI_FIRST` Priority | Ensures inspection happens immediately, before any other subsystem alters the packet data. |
-| **Netfilter Architecture** | `NF_ACCEPT` Return Code | Acts purely as an Intrusion Detection/Inspection system. It observes traffic but does not drop (`NF_DROP`) or alter it. |
-| **Packet Processing** | `ip_hdr(skb)` Macro | Safely casts the network layer portion of the `sk_buff` memory space into a readable `iphdr` structure. |
-| **Packet Processing** | `skb` Null Check | Prevents catastrophic kernel panics if a malformed or empty buffer is passed to the hook. |
-| **Packet Processing** | `ipv6hdr` Struct Ready | Prepares the codebase architecture for extracting the `hop_limit` field from IPv6 packets. |
-| **Logging & Output** | `printk(KERN_INFO ...)` | Uses the kernel's internal logging mechanism. Observable via `dmesg` without requiring any user-space daemon. |
-| **Logging & Output** | `dmesg` Log Verification | Provides a lightweight, non-blocking, and asynchronous readout of the intercepted TTL data. |
-| **Build Environment** | `make -j1` Build Strategy | Prevents Out-Of-Memory (OOM) killer terminations in the RAM-constrained VM environment. |
-| **Build Environment** | Disabling BTF Debug Info | Resolves the fatal `pahole` missing data error during the final `vmlinux` linking stage. |
-| **Build Environment** | Containerized Build (Podman) | Isolates the compilation toolchain and required dependencies entirely from the host Ubuntu OS. |
-| **Module Integration** | Custom `Makefile` | Integrates with the existing kernel build system (`kbuild`) seamlessly using `obj-m`. |
-| **Module Integration** | Out-of-tree Compilation | Keeps the module source independent and isolated from the massive main kernel source tree. |
-| **Module Integration** | LKM (.ko) Format | Allows for dynamic insertion (`insmod`) and removal (`rmmod`) without rebooting the guest VM. |
+#### Netfilter Architecture
+* **`NF_INET_PRE_ROUTING` Hook:** Catches all incoming traffic before routing, ensuring no packets are missed due to local routing rules.
+* **`PF_INET` Protocol Family:** Targets IPv4 traffic specifically at the primary Netfilter hook registration phase.
+* **`NF_IP_PRI_FIRST` Priority:** Ensures inspection happens immediately, before any other subsystem alters the packet data.
+* **`NF_ACCEPT` Return Code:** Acts purely as an Intrusion Detection/Inspection system. It observes traffic but does not drop (`NF_DROP`) or alter it.
+
+#### Packet Processing & Logging
+* **`ip_hdr(skb)` Macro:** Safely casts the network layer portion of the `sk_buff` memory space into a readable `iphdr` structure.
+* **`skb` Null Check:** Prevents catastrophic kernel panics if a malformed or empty buffer is passed to the hook.
+* **`ipv6hdr` Struct Ready:** Prepares the codebase architecture for extracting the `hop_limit` field from IPv6 packets.
+* **`printk(KERN_INFO ...)`:** Uses the kernel's internal logging mechanism. Observable via `dmesg` without requiring any user-space daemon.
+* **`dmesg` Log Verification:** Provides a lightweight, non-blocking, and asynchronous readout of the intercepted TTL data.
+
+#### Build Environment & Integration
+* **`make -j1` Build Strategy:** Prevents Out-Of-Memory (OOM) killer terminations in the RAM-constrained VM environment.
+* **Disabling BTF Debug Info:** Resolves the fatal `pahole` missing data error during the final `vmlinux` linking stage.
+* **Containerized Build (Podman):** Isolates the compilation toolchain and required dependencies entirely from the host Ubuntu OS.
+* **Custom `Makefile`:** Integrates with the existing kernel build system (`kbuild`) seamlessly using `obj-m`.
+* **Out-of-tree Compilation:** Keeps the module source independent and isolated from the massive main kernel source tree.
+* **LKM (.ko) Format:** Allows for dynamic insertion (`insmod`) and removal (`rmmod`) without rebooting the guest VM.
 
 ## 3. Project Structure
 
