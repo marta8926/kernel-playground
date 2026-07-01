@@ -1,17 +1,19 @@
 # Software Networks Project: M14 – Packet TTL Inspection (Netfilter)
 
-**Author:** Marta Rolbiecka [0383386]
-**Level:** Kernel Module Development
+# Software Networks Project: M14 – Packet TTL Inspection (Netfilter)
+
+**Author:** Marta Rolbiecka [0383386] <br>
+**Level:** Kernel Module Development <br>
 **Course:** Software Networks (2025-2026)
 
 ## Table of Contents
-1. Project Overview
-2. Code Architecture & Data Structures
-3. Project Structure
-4. Environment Setup & Troubleshooting
-5. Building the Project
-6. Running the Module
-7. Testing & Verification
+1. [Project Overview](#1-project-overview)
+2. [Code Architecture & Data Structures](#2-code-architecture--data-structures)
+3. [Project Structure](#3-project-structure)
+4. [Environment Setup & Troubleshooting](#4-environment-setup--troubleshooting)
+5. [Building the Project](#5-building-the-project)
+6. [Running the Module](#6-running-the-module)
+7. [Testing & Verification](#7-testing--verification)
 
 ---
 
