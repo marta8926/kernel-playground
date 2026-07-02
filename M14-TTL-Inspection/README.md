@@ -72,6 +72,7 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
     return NF_ACCEPT; // Allow the packet to continue
 }
 
+---
 ## 2.3 Key Design Decisions
 
 | Category | Decision | Rationale |
@@ -92,6 +93,7 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
 | **Module Integration** | Out-of-tree Compilation | Keeps the module source isolated from the main kernel source tree. |
 | **Module Integration** | LKM (.ko) Format | Allows dynamic insertion (`insmod`) without rebooting the guest VM. |
 
+---
 ## 3. Project Structure
 
 ```text
