@@ -127,9 +127,10 @@ During the setup of the testbed environment via the provided `./setup-all.sh` sc
 
 ## 5. Building the Project
 
-Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container.
+Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container. The compilation must be done inside the `kernel-builder` Podman container.
 
-> **Tip for evaluators:** If you are not inside the container yet, start it from your host machine using the following commands:
+**Step 1: Access the Container (Terminal 1)**
+Open your first terminal and execute the following commands to start the container and enter it:
 > ```bash
 > # Navigate to the directory first, before switching to root
 > cd ~/kernel-playground/podman
@@ -137,26 +138,8 @@ Ensure you are logged in as `root` and operating inside the `kernel-builder` Pod
 > ./run-detach.sh
 > podman exec -it kernel-builder bash
 > ```
-
-Once inside the container, navigate to the modules directory and invoke the compilation process:
-```bash
-cd /opt/kernel-playground/kernel/modules
-make clean
-make
-```
-## 5. Building the Project
-
-Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container.
-
-> **Tip for evaluators:** If you are not inside the container yet, start it from your host machine using the following commands:
-> ```bash
-> sudo su
-> cd ~/kernel-playground/podman
-> ./run-detach.sh
-> podman exec -it kernel-builder bash
-> ```
-
-Once inside the container, navigate to the modules directory and invoke the compilation process:
+**Step 2: Compile the Module**
+Once inside the container, navigate to the modules directory and build the code:
 ```bash
 cd /opt/kernel-playground/kernel/modules
 make clean
@@ -166,23 +149,35 @@ This process compiles `m14_ttl.c` into the loadable kernel object `m14_ttl.ko`. 
 
 ---
 ## 6. Running the Module
-
-The module must be executed strictly within the testbed VM (Guest OS) running the freshly compiled custom kernel, not on the Host OS.
+The module must be loaded inside the QEMU Virtual Machine, not in the container. This requires two terminals.
 
 **Step 1: Boot the Virtual Machine**
-In Terminal 1 (inside the container), launch the QEMU VM:
+Still in Terminal 1 (inside the container), launch the QEMU VM:
 ```bash
+podman exec -it kernel-builder bash
 cd /opt/kernel-playground/tests/vm
 ./run.sh
 ```
+(Note: The VM will lock this terminal. Leave it running in the background.) 
 
 **Step 2: Access the VM and Load the Module**
-Open Terminal 2, enter the container, connect to the VM via SSH, and insert the module:
+Open a new, second terminal window on your host machine and run:Open Terminal 2, enter the container, connect to the VM via SSH, and insert the module:
 ```bash
 podman exec -it kernel-builder bash
 cd /opt/kernel-playground/tests/vm
 ./enter.sh
 
+insmod /mnt/shared/m14_ttl.ko
+```
+# 1. Become root and enter the container
+sudo su
+podman exec -it kernel-builder bash
+
+# 2. SSH into the running QEMU Virtual Machine
+cd /opt/kernel-playground/tests/vm
+./enter.sh
+
+# 3. Load the custom kernel module
 insmod /mnt/shared/m14_ttl.ko
 ```
 A silent return indicates the module was successfully injected into the kernel space.
@@ -195,9 +190,7 @@ With the module loaded, generate traffic to verify packet interception.
 
 **1. Generate ICMP Traffic:**
 Send ping requests to an external server (e.g., Google DNS) to force packets through the networking stack:
-```bash
-ping -c 4 8.8.8.8
-```
+
 ```bash
 # Generate IPv4 traffic
 ping -c 4 8.8.8.8
