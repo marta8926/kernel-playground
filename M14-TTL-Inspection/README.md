@@ -152,6 +152,7 @@ This process compiles `m14_ttl.c` into the loadable kernel object `m14_ttl.ko`. 
 The module must be loaded inside the QEMU Virtual Machine, not in the container. This requires two terminals.
 
 **Step 1: Boot the Virtual Machine**
+
 Still in Terminal 1 (inside the container), launch the QEMU VM:
 ```bash
 podman exec -it kernel-builder bash
@@ -161,6 +162,7 @@ cd /opt/kernel-playground/tests/vm
 (Note: The VM will lock this terminal. Leave it running in the background.) 
 
 **Step 2: Access the VM and Load the Module**
+
 Open a new, second terminal window on your host machine and run:Open Terminal 2, enter the container, connect to the VM via SSH, and insert the module:
 ```bash
 podman exec -it kernel-builder bash
@@ -169,17 +171,17 @@ cd /opt/kernel-playground/tests/vm
 
 insmod /mnt/shared/m14_ttl.ko
 ```
-# 1. Become root and enter the container
+1. Become root and enter the container
 ```
 sudo su
 podman exec -it kernel-builder bash
 ```
-# 2. SSH into the running QEMU Virtual Machine
+2. SSH into the running QEMU Virtual Machine
 ```
 cd /opt/kernel-playground/tests/vm
 ./enter.sh
 ```
-# 3. Load the custom kernel module
+3. Load the custom kernel module
 ```
 insmod /mnt/shared/m14_ttl.ko
 ```
