@@ -103,7 +103,7 @@ kernel-playground/
 ├── kernel/modules/Makefile     # Modified to include obj-m += m14_ttl.o
 └── M14-TTL-Inspection/
     ├── README.md               # This documentation file
-    └── screenshot.png          # Execution evidence (add your image here)
+    └── ttl_inspection_proof.png          # Execution evidence 
 ```
 ---
 
