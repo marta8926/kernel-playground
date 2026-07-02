@@ -125,20 +125,6 @@ During the setup of the testbed environment via the provided `./setup-all.sh` sc
    The kernel build failed at the final linking stage (`vmlinux`) with the error: `FAILED: load BTF from vmlinux: No data available`. The container lacked the `pahole` tools required to generate BPF Type Format (BTF) data.
    * **Solution:** The kernel configuration was manually modified. Using `nano .config`, the setting was changed to `# CONFIG_DEBUG_INFO_BTF is not set`. The kernel was rebuilt successfully. Disabling BTF debug info allowed the custom kernel to compile cleanly without affecting the Netfilter functionality required for this specific task.
 
-
-## 5. Building the Project
-
-Ensure you are logged in as root and operating inside the `kernel-builder` Podman container.
-
-Navigate to the modules directory and invoke the Makefile:
-```bash
-cd /opt/kernel-playground/kernel/modules
-make clean
-make
-```
-This process compiles `m14_ttl.c` into the loadable kernel object `m14_ttl.ko`. The Makefile automatically copies the compiled module into the `tests/vm/shared` directory, making it accessible to the QEMU virtual machine.
-
----
 ## 5. Building the Project
 
 Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container.
@@ -157,6 +143,9 @@ cd /opt/kernel-playground/kernel/modules
 make clean
 make
 ```
+This process compiles `m14_ttl.c` into the loadable kernel object `m14_ttl.ko`. The Makefile automatically copies the compiled module into the `tests/vm/shared` directory, making it accessible to the QEMU virtual machine.
+
+---
 ## 6. Running the Module
 
 The module must be executed strictly within the testbed VM (Guest OS) running the freshly compiled custom kernel, not on the Host OS.
