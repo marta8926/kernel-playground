@@ -222,6 +222,9 @@ The system should successfully log the interception of outgoing/incoming packets
 [  547.021411] M14 IPv4 Packet - TTL: 64
 [  547.284744] M14 IPv6 Packet - Hop Limit: 255
 ```
+### Execution Evidence
+
+![TTL Inspection Proof](ttl_inspection_proof.png)
 
 **3. Cleanup:**
 
