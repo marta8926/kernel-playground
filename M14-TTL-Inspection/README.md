@@ -131,6 +131,25 @@ Ensure you are logged in as `root` and operating inside the `kernel-builder` Pod
 
 > **Tip for evaluators:** If you are not inside the container yet, start it from your host machine using the following commands:
 > ```bash
+> # Navigate to the directory first, before switching to root
+> cd ~/kernel-playground/podman
+> sudo su
+> ./run-detach.sh
+> podman exec -it kernel-builder bash
+> ```
+
+Once inside the container, navigate to the modules directory and invoke the compilation process:
+```bash
+cd /opt/kernel-playground/kernel/modules
+make clean
+make
+```
+## 5. Building the Project
+
+Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container.
+
+> **Tip for evaluators:** If you are not inside the container yet, start it from your host machine using the following commands:
+> ```bash
 > sudo su
 > cd ~/kernel-playground/podman
 > ./run-detach.sh
