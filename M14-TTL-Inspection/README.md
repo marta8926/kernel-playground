@@ -22,71 +22,76 @@ This project implements a custom Linux Kernel Module (LKM) designed to inspect n
 Unlike user-space packet sniffers (like Wireshark/tcpdump) which rely on packet copying via `libpcap`, this implementation operates entirely within kernel space. It hooks directly into the networking stack, ensuring deep inspection with minimal overhead. The project is executed and tested within a custom QEMU micro-VM environment orchestrated by Podman.
 
 ---
-
 ## 2. Code Architecture & Data Structures
 
 All packet processing logic is encapsulated within a single kernel module (`m14_ttl.c`). Below is a detailed breakdown of the key kernel APIs and structures utilized.
 
 ### 2.1 The Netfilter Hook Structure
-To intercept packets, the module registers a callback function using the Netfilter framework. This requires defining an `nf_hook_ops` structure.
+To intercept packets, the module registers callback functions using the Netfilter framework. Because we are inspecting both IPv4 and IPv6 traffic independently, we define two separate `nf_hook_ops` structures.
 
 ```c
-static struct nf_hook_ops nfho;
+// Netfilter hook configuration for IPv4
+static struct nf_hook_ops nfho_ipv4 = {
+    .hook = ttl_ipv4_hook,               // Callback function for IPv4
+    .pf = NFPROTO_IPV4,                  // Target IPv4 protocol family
+    .hooknum = NF_INET_PRE_ROUTING,      // Intercept packets before routing decisions
+    .priority = NF_IP_PRI_FIRST,         // Execute with the highest priority
+};
 
-nfho.hook = hook_func;                       // Function to call when a packet arrives
-nfho.hooknum = NF_INET_PRE_ROUTING;          // Hook point: immediately after packet reception
-nfho.pf = PF_INET;                           // Protocol family: IPv4 (and adaptable to IPv6)
-nfho.priority = NF_IP_PRI_FIRST;             // Priority: highest, run before other hooks### 2.2 The Hook Function and Socket Buffers (`sk_buff`)
-The core interception logic is executed by the hook function, which receives a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
+// Netfilter hook configuration for IPv6
+static struct nf_hook_ops nfho_ipv6 = {
+    .hook = hop_limit_ipv6_hook,         // Callback function for IPv6
+    .pf = NFPROTO_IPV6,                  // Target IPv6 protocol family
+    .hooknum = NF_INET_PRE_ROUTING,      // Intercept packets before routing decisions
+    .priority = NF_IP6_PRI_FIRST,        // Execute with the highest priority
+};
+---
+
+
+```markdown
+### 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
+The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
 
 ```c
-unsigned int hook_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
-    struct iphdr *ip_header;
-
-    // Safety check: ensure the socket buffer is not null
-    if (!skb) return NF_ACCEPT;
-
-    // Extract the network layer header
-    ip_header = ip_hdr(skb);
-
-    if (ip_header) {
-        // Print the TTL value to the kernel ring buffer
-        printk(KERN_INFO "M14 IPv4 Packet - TTL: %d\n", ip_header->ttl);
+/* IPv4 Hook Function */
+static unsigned int ttl_ipv4_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
+    struct iphdr *iph = ip_hdr(skb);
+    
+    if (iph) {
+        pr_info("M14 IPv4 Packet - TTL: %u\n", iph->ttl);
     }
-
-    return NF_ACCEPT; // Allow the packet to continue its journey
+    return NF_ACCEPT; // Allow the packet to continue
 }
-```
+
+/* IPv6 Hook Function */
+static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
+    struct ipv6hdr *ip6h = ipv6_hdr(skb);
+    
+    if (ip6h) {
+        pr_info("M14 IPv6 Packet - Hop Limit: %u\n", ip6h->hop_limit);
+    }
+    return NF_ACCEPT; // Allow the packet to continue
+}
 
 ### 2.3 Key Design Decisions
 
-#### Netfilter Architecture
-| Decision | Rationale |
-| :--- | :--- |
-| **`NF_INET_PRE_ROUTING` Hook** | Catches all incoming traffic before routing, ensuring no packets are missed. |
-| **`PF_INET` Protocol Family** | Targets IPv4 traffic specifically at the primary Netfilter hook registration phase. |
-| **`NF_IP_PRI_FIRST` Priority** | Ensures inspection happens immediately, before any other subsystem alters data. |
-| **`NF_ACCEPT` Return Code** | Acts purely as an inspection system; observes traffic without dropping it. |
-
-#### Packet Processing & Logging
-| Decision | Rationale |
-| :--- | :--- |
-| **`ip_hdr(skb)` Macro** | Safely casts packet memory space into a readable `iphdr` structure. |
-| **`skb` Null Check** | Prevents kernel panics if a malformed buffer is passed to the hook. |
-| **`ipv6hdr` Struct Ready** | Prepares the codebase to extract the `hop_limit` field from IPv6 packets. |
-| **`printk(KERN_INFO ...)`** | Uses the kernel's internal logging mechanism for observability. |
-| **`dmesg` Log Verification** | Provides a lightweight, asynchronous readout of the intercepted TTL data. |
-
-#### Build Environment & Integration
-| Decision | Rationale |
-| :--- | :--- |
-| **`make -j1` Build Strategy** | Prevents OOM killer terminations in the RAM-constrained VM environment. |
-| **Disabling BTF Debug Info** | Resolves the fatal `pahole` missing data error during linking. |
-| **Containerized Build (Podman)** | Isolates the compilation toolchain from the host Ubuntu OS. |
-| **Custom `Makefile`** | Integrates with the kernel build system (`kbuild`) using `obj-m`. |
-| **Out-of-tree Compilation** | Keeps the module source isolated from the main kernel source tree. |
-| **LKM (.ko) Format** | Allows dynamic insertion (`insmod`) without rebooting the VM. |
-
+| Category | Decision | Rationale |
+| :--- | :--- | :--- |
+| **Netfilter Architecture** | `NF_INET_PRE_ROUTING` Hook | Catches all incoming traffic before routing, ensuring no packets are missed. |
+| **Netfilter Architecture** | `NFPROTO_IPV4` & `IPV6` | Explicitly targets both protocol families at the primary hook registration phase. |
+| **Netfilter Architecture** | `NF_IP_PRI_FIRST` Priority | Ensures inspection happens immediately, before any other subsystem alters data. |
+| **Netfilter Architecture** | `NF_ACCEPT` Return Code | Acts purely as an inspection system; observes traffic without dropping it. |
+| **Packet Processing** | `ip_hdr(skb)` Macro | Safely casts packet memory space into a readable `iphdr` structure for IPv4. |
+| **Packet Processing** | `skb` Null Check | Prevents kernel panics if a malformed or empty buffer is passed to the hook. |
+| **Packet Processing** | `ipv6hdr` Struct Integration | Successfully extracts the `hop_limit` field directly from IPv6 packets. |
+| **Logging & Output** | `pr_info(...)` Macro | Uses the modern kernel logging mechanism, preferred over raw `printk`. |
+| **Logging & Output** | `dmesg` Log Verification | Provides a lightweight, asynchronous readout of the intercepted TTL data. |
+| **Build Environment** | `make -j1` Build Strategy | Prevents OOM killer terminations in the RAM-constrained VM environment. |
+| **Build Environment** | Disabling BTF Debug Info | Resolves the fatal `pahole` missing data error during the `vmlinux` linking stage. |
+| **Build Environment** | Containerized Build (Podman)| Isolates the compilation toolchain from the host Ubuntu OS. |
+| **Module Integration** | Custom `Makefile` | Integrates with the kernel build system (`kbuild`) using `obj-m`. |
+| **Module Integration** | Out-of-tree Compilation | Keeps the module source isolated from the main kernel source tree. |
+| **Module Integration** | LKM (.ko) Format | Allows dynamic insertion (`insmod`) without rebooting the guest VM. |
 ## 3. Project Structure
 
 ```text
