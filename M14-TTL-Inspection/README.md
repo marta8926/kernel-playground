@@ -48,7 +48,6 @@ static struct nf_hook_ops nfho_ipv6 = {
 };
 ```
 ---
-2.2 The Hook Functions and Socket Buffers (sk_buff)
 ## 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
 The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
 
@@ -105,7 +104,6 @@ kernel-playground/
 └── M14-TTL-Inspection/
     ├── README.md               # This documentation file
     └── screenshot.png          # Execution evidence (add your image here)
-```
 ```
 ---
 
