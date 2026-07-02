@@ -27,8 +27,6 @@ Unlike user-space packet sniffers (like Wireshark/tcpdump) which rely on packet 
 
 All packet processing logic is encapsulated within a single kernel module (`m14_ttl.c`). Below is a detailed breakdown of the key kernel APIs and structures utilized.
 
-
-
 ## 2.1 The Netfilter Hook Structure
 To intercept packets, the module registers callback functions using the Netfilter framework. Because we are inspecting both IPv4 and IPv6 traffic independently, we define two separate `nf_hook_ops` structures.
 
@@ -48,9 +46,9 @@ static struct nf_hook_ops nfho_ipv6 = {
     .hooknum = NF_INET_PRE_ROUTING,      // Intercept packets before routing decisions
     .priority = NF_IP6_PRI_FIRST,        // Execute with the highest priority
 };
+
 ---
-
-
+2.2 The Hook Functions and Socket Buffers (sk_buff)
 ## 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
 The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
 
