@@ -73,26 +73,68 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
 }
 ```
 ---
-## 2.3 Key Design Decisions
-```
-| Category | Decision | Rationale |
-| :--- | :--- | :--- |
-| **Netfilter Architecture** | `NF_INET_PRE_ROUTING` Hook | Catches all incoming traffic before routing, ensuring no packets are missed. |
-| **Netfilter Architecture** | `NFPROTO_IPV4` & `IPV6` | Explicitly targets both protocol families at the primary hook registration phase. |
-| **Netfilter Architecture** | `NF_IP_PRI_FIRST` Priority | Ensures inspection happens immediately, before any other subsystem alters data. |
-| **Netfilter Architecture** | `NF_ACCEPT` Return Code | Acts purely as an inspection system; observes traffic without dropping it. |
-| **Packet Processing** | `ip_hdr(skb)` Macro | Safely casts packet memory space into a readable `iphdr` structure for IPv4. |
-| **Packet Processing** | `skb` Null Check | Prevents kernel panics if a malformed or empty buffer is passed to the hook. |
-| **Packet Processing** | `ipv6hdr` Struct Integration | Successfully extracts the `hop_limit` field directly from IPv6 packets. |
-| **Logging & Output** | `pr_info(...)` Macro | Uses the modern kernel logging mechanism, preferred over raw `printk`. |
-| **Logging & Output** | `dmesg` Log Verification | Provides a lightweight, asynchronous readout of the intercepted TTL data. |
-| **Build Environment** | `make -j1` Build Strategy | Prevents OOM killer terminations in the RAM-constrained VM environment. |
-| **Build Environment** | Disabling BTF Debug Info | Resolves the fatal `pahole` missing data error during the `vmlinux` linking stage. |
-| **Build Environment** | Containerized Build (Podman)| Isolates the compilation toolchain from the host Ubuntu OS. |
-| **Module Integration** | Custom `Makefile` | Integrates with the kernel build system (`kbuild`) using `obj-m`. |
-| **Module Integration** | Out-of-tree Compilation | Keeps the module source isolated from the main kernel source tree. |
-| **Module Integration** | LKM (.ko) Format | Allows dynamic insertion (`insmod`) without rebooting the guest VM. |
-```
+### 2.3 Key Design Decisions
+
+#### Netfilter Architecture
+
+| Decision / API | Rationale |
+| :--- | :--- |
+| **`NF_INET_PRE_ROUTING`** | Catches incoming traffic before routing decisions. |
+| **`NFPROTO_IPV4`** | Targets IPv4 protocol family traffic. |
+| **`NFPROTO_IPV6`** | Targets IPv6 protocol family traffic. |
+| **`NF_IP_PRI_FIRST`** | Ensures IPv4 inspection happens immediately. |
+| **`NF_IP6_PRI_FIRST`** | Ensures IPv6 inspection happens immediately. |
+| **`NF_ACCEPT`** | Acts as an observer; allows packets to pass. |
+| **`nf_hook_ops`** | Core structure defining the interception rules. |
+| **`.hook` field** | Points to the custom callback logic function. |
+| **`.hooknum` field** | Specifies where in the stack to intercept. |
+| **`.pf` field** | Specifies the protocol family to monitor. |
+| **`.priority` field** | Determines execution order among other hooks. |
+| **`nf_register_net_hook`**| Registers the hook with the kernel network stack. |
+| **`nf_unregister_net_hook`**| Safely removes the hook during module cleanup. |
+| **`init_net`** | Targets the default network namespace. |
+| **`nf_hook_state`** | Provides state context to the callback function. |
+
+#### Packet Processing
+
+| Decision / API | Rationale |
+| :--- | :--- |
+| **`sk_buff` struct** | Main networking buffer containing packet data. |
+| **`ip_hdr()` macro** | Safely extracts the IPv4 header from the buffer. |
+| **`ipv6_hdr()` macro** | Safely extracts the IPv6 header from the buffer. |
+| **`iphdr` struct** | Represents the IPv4 network layer header. |
+| **`ipv6hdr` struct** | Represents the IPv6 network layer header. |
+| **`ttl` extraction** | Targets the Time-To-Live field in IPv4. |
+| **`hop_limit` extraction**| Targets the Hop Limit field in IPv6. |
+| **`!skb` Null Check** | Prevents panics from empty socket buffers. |
+| **`!iph` Null Check** | Validates IPv4 header before data extraction. |
+| **`!ip6h` Null Check** | Validates IPv6 header before data extraction. |
+| **Read-only Inspection** | Intercepts without modifying the payload. |
+| **Memory Cast Safety** | Casts network layer memory spaces securely. |
+| **`priv` pointer** | Unused private data pointer handling. |
+| **Asynchronous Execution**| Processes packets without blocking the stack. |
+| **L3 Isolation** | Ignores Layer 4 (TCP/UDP) complexities entirely. |
+
+#### Logging & Build Environment
+
+| Decision / API | Rationale |
+| :--- | :--- |
+| **`pr_info(...)`** | Modern kernel logging, preferred over `printk`. |
+| **`dmesg` Verification** | Lightweight, non-blocking asynchronous readout. |
+| **`KERN_INFO` Level** | Standard informational logging level without alerts. |
+| **`make -j1` Strategy** | Prevents OOM terminations in the VM environment. |
+| **BTF Debug Disabled** | Resolves the fatal `pahole` missing data error. |
+| **Podman Container** | Isolates compilation from the host Ubuntu OS. |
+| **Custom `Makefile`** | Integrates cleanly with the `kbuild` system. |
+| **`obj-m` Directive** | Compiles the code as a loadable module. |
+| **Out-of-tree Build** | Keeps source isolated from main kernel tree. |
+| **LKM (`.ko`) Format** | Enables dynamic insertion into the running kernel. |
+| **`insmod` Utility** | Loads the compiled module into the VM system. |
+| **`rmmod` Utility** | Unloads the module without rebooting the VM. |
+| **`MODULE_LICENSE`** | Declares GPL compliance to prevent kernel tainting. |
+| **`MODULE_AUTHOR`** | Attributes code ownership within the kernel space. |
+| **`MODULE_DESCRIPTION`**| Provides a clear summary for `modinfo` tools. |
+
 ---
 
 ## 3. Project Structure
