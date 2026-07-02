@@ -170,14 +170,17 @@ cd /opt/kernel-playground/tests/vm
 insmod /mnt/shared/m14_ttl.ko
 ```
 # 1. Become root and enter the container
+```
 sudo su
 podman exec -it kernel-builder bash
-
+```
 # 2. SSH into the running QEMU Virtual Machine
+```
 cd /opt/kernel-playground/tests/vm
 ./enter.sh
-
+```
 # 3. Load the custom kernel module
+```
 insmod /mnt/shared/m14_ttl.ko
 ```
 A silent return indicates the module was successfully injected into the kernel space.
