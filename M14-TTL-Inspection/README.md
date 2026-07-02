@@ -46,7 +46,7 @@ static struct nf_hook_ops nfho_ipv6 = {
     .hooknum = NF_INET_PRE_ROUTING,      // Intercept packets before routing decisions
     .priority = NF_IP6_PRI_FIRST,        // Execute with the highest priority
 };
-
+```
 ---
 2.2 The Hook Functions and Socket Buffers (sk_buff)
 ## 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
@@ -72,10 +72,10 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
     }
     return NF_ACCEPT; // Allow the packet to continue
 }
-
+```
 ---
 ## 2.3 Key Design Decisions
-
+```
 | Category | Decision | Rationale |
 | :--- | :--- | :--- |
 | **Netfilter Architecture** | `NF_INET_PRE_ROUTING` Hook | Catches all incoming traffic before routing, ensuring no packets are missed. |
@@ -93,7 +93,7 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
 | **Module Integration** | Custom `Makefile` | Integrates with the kernel build system (`kbuild`) using `obj-m`. |
 | **Module Integration** | Out-of-tree Compilation | Keeps the module source isolated from the main kernel source tree. |
 | **Module Integration** | LKM (.ko) Format | Allows dynamic insertion (`insmod`) without rebooting the guest VM. |
-
+```
 ---
 
 ## 3. Project Structure
@@ -106,7 +106,7 @@ kernel-playground/
     ├── README.md               # This documentation file
     └── screenshot.png          # Execution evidence (add your image here)
 ```
-
+```
 ---
 
 ## 4. Environment Setup & Troubleshooting
