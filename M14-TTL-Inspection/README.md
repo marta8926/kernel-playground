@@ -48,8 +48,7 @@ static struct nf_hook_ops nfho_ipv6 = {
 ---
 
 
-```markdown
-### 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
+## 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
 The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
 
 ```c
@@ -73,7 +72,7 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
     return NF_ACCEPT; // Allow the packet to continue
 }
 
-### 2.3 Key Design Decisions
+## 2.3 Key Design Decisions
 
 | Category | Decision | Rationale |
 | :--- | :--- | :--- |
@@ -92,6 +91,7 @@ static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const s
 | **Module Integration** | Custom `Makefile` | Integrates with the kernel build system (`kbuild`) using `obj-m`. |
 | **Module Integration** | Out-of-tree Compilation | Keeps the module source isolated from the main kernel source tree. |
 | **Module Integration** | LKM (.ko) Format | Allows dynamic insertion (`insmod`) without rebooting the guest VM. |
+
 ## 3. Project Structure
 
 ```text
