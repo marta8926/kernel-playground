@@ -176,6 +176,7 @@ During the setup of the testbed environment via the provided `./setup-all.sh` sc
 Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container. The compilation must be done inside the `kernel-builder` Podman container.
 
 **Step 1: Access the Container (Terminal 1)**
+
 Open your first terminal and execute the following commands to start the container and enter it:
 > ```bash
 > # Navigate to the directory first, before switching to root
@@ -185,6 +186,7 @@ Open your first terminal and execute the following commands to start the contain
 > podman exec -it kernel-builder bash
 > ```
 **Step 2: Compile the Module**
+
 Once inside the container, navigate to the modules directory and build the code:
 ```bash
 cd /opt/kernel-playground/kernel/modules
