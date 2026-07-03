@@ -267,7 +267,7 @@ The system should successfully log the interception of outgoing/incoming packets
 ```
 ### Execution Evidence
 
-![TTL Inspection Proof](ttll.png)
+![TTL Inspection Proof](TTL Inspection Proof.png)
 
 **3. Cleanup:**
 
