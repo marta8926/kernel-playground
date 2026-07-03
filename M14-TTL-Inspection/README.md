@@ -206,7 +206,7 @@ cd /opt/kernel-playground/tests/vm
 
 **Step 2: Access the VM and Load the Module**
 
-Open a new, second terminal window on your host machine and run:Open Terminal 2, enter the container, connect to the VM via SSH, and insert the module:
+Open a new, second terminal window on your host machine and run:
 ```bash
 podman exec -it kernel-builder bash
 cd /opt/kernel-playground/tests/vm
