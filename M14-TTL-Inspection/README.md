@@ -179,7 +179,7 @@ Ensure you are logged in as `root` and operating inside the `kernel-builder` Pod
 
 Open your first terminal and execute the following commands to start the container and enter it:
 > ```bash
-> # Navigate to the directory first, before switching to root
+> # Navigate to the directory first, before switching to root(if there is a problem with finding the right folder)
 > cd ~/kernel-playground/podman
 > sudo su
 > ./run-detach.sh
