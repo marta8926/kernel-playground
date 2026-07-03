@@ -153,6 +153,7 @@ kernel-playground/
 ## 4. Environment Setup & Troubleshooting
 
 ### Prerequisites
+* **Base Environment:** The testbed environment must first be installed and configured according to the official instructions provided in the main kernel-playground repository's README (using the ./setup-all.sh script, etc.).
 * **OS:** Ubuntu Linux (Running within a VirtualBox VM)
 * **Tools:** Podman, Git
 * **Privileges:** Operations must be executed as `root` (`sudo su`) to prevent Git submodule ownership issues.
@@ -169,6 +170,8 @@ During the setup of the testbed environment via the provided `./setup-all.sh` sc
    * **Solution:** The kernel configuration was manually modified. Using `nano .config`, the setting was changed to `# CONFIG_DEBUG_INFO_BTF is not set`. The kernel was rebuilt successfully. Disabling BTF debug info allowed the custom kernel to compile cleanly without affecting the Netfilter functionality required for this specific task.
 
 ## 5. Building the Project
+
+Note: Before building, ensure you have successfully set up the environment using the main repository's ./setup-all.sh script.
 
 Ensure you are logged in as `root` and operating inside the `kernel-builder` Podman container. The compilation must be done inside the `kernel-builder` Podman container.
 
