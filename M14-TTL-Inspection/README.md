@@ -27,7 +27,42 @@ Unlike user-space packet sniffers (like Wireshark/tcpdump) which rely on packet 
 
 All packet processing logic is encapsulated within a single kernel module (`m14_ttl.c`). Below is a detailed breakdown of the key kernel APIs and structures utilized.
 
-## 2.1 The Netfilter Hook Structure
+## 2.1 The Hook Functions and Socket Buffers (`sk_buff`)
+The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
+
+```c
+/* * IPv4 Hook Function
+ * Extracts the IPv4 header and logs the TTL value.
+ */
+static unsigned int ttl_ipv4_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
+    struct iphdr *iph = ip_hdr(skb);
+    
+    // Safety check: ensure the IP header exists before accessing it
+    if (iph) {
+        pr_info("M14 IPv4 Packet - TTL: %u\n", iph->ttl);
+    }
+    
+    // Allow the packet to continue through the network stack
+    return NF_ACCEPT;
+}
+
+/* * IPv6 Hook Function
+ * Extracts the IPv6 header and logs the Hop Limit value.
+ */
+static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
+    struct ipv6hdr *ip6h = ipv6_hdr(skb);
+    
+    // Safety check: ensure the IPv6 header exists before accessing it
+    if (ip6h) {
+        pr_info("M14 IPv6 Packet - Hop Limit: %u\n", ip6h->hop_limit);
+    }
+    
+    // Allow the packet to continue through the network stack
+    return NF_ACCEPT;
+}
+```
+---
+## 2.2 The Netfilter Hook Structure
 To intercept packets, the module registers callback functions using the Netfilter framework. Because we are inspecting both IPv4 and IPv6 traffic independently, we define two separate `nf_hook_ops` structures.
 
 ```c
@@ -48,32 +83,40 @@ static struct nf_hook_ops nfho_ipv6 = {
 };
 ```
 ---
-## 2.2 The Hook Functions and Socket Buffers (`sk_buff`)
-The core interception logic is executed by the hook functions, which receive a pointer to the `sk_buff` (socket buffer) structure. The `sk_buff` is the fundamental data structure in the Linux networking stack, containing the packet payload and headers.
+## 2.3 Module Initialization and Clean up
 
+This section manages the module's lifecycle. The `m14_init` function registers both IPv4 and IPv6 Netfilter hooks when the module loads. The `m14_exit` function safely unregisters them during removal to prevent kernel crashes. 
 ```c
-/* IPv4 Hook Function */
-static unsigned int ttl_ipv4_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
-    struct iphdr *iph = ip_hdr(skb);
+/* * Module Initialization
+ * Registers both Netfilter hooks (IPv4 and IPv6) with the kernel.
+ */
+static int __init m14_init(void) {
+    nf_register_net_hook(&init_net, &nfho_ipv4);
+    nf_register_net_hook(&init_net, &nfho_ipv6);
+    pr_info("m14_ttl: loaded\n");
     
-    if (iph) {
-        pr_info("M14 IPv4 Packet - TTL: %u\n", iph->ttl);
-    }
-    return NF_ACCEPT; // Allow the packet to continue
+    return 0;
 }
 
-/* IPv6 Hook Function */
-static unsigned int hop_limit_ipv6_hook(void *priv, struct sk_buff *skb, const struct nf_hook_state *state) {
-    struct ipv6hdr *ip6h = ipv6_hdr(skb);
-    
-    if (ip6h) {
-        pr_info("M14 IPv6 Packet - Hop Limit: %u\n", ip6h->hop_limit);
-    }
-    return NF_ACCEPT; // Allow the packet to continue
+/* * Module Cleanup
+ * Unregisters the Netfilter hooks before the module is unloaded.
+ */
+static void __exit m14_exit(void) {
+    nf_unregister_net_hook(&init_net, &nfho_ipv4);
+    nf_unregister_net_hook(&init_net, &nfho_ipv6);
+    pr_info("m14_ttl: unloaded\n");
 }
+
+// Register module entry and exit points
+module_init(m14_init);
+module_exit(m14_exit);
+
+// Module metadata required by the Linux kernel
+MODULE_LICENSE("GPL");
+MODULE_AUTHOR("Marta Rolbiecka");
+MODULE_DESCRIPTION("M14 TTL and Hop Limit Inspector");
 ```
----
-### 2.3 Key Design Decisions
+### 2.4 Key Design Decisions
 
 | Category | Decision | Rationale |
 | :--- | :--- | :--- |
